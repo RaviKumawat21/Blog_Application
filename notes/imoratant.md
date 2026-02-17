@@ -1,0 +1,2 @@
+# Q1. React में forwardRef का उपयोग क्यों किया जाता है?
+##Ans : "forwardRef का उपयोग तब करते हैं जब हमें एक reusable component (जैसे Input) बनाना हो और parent component को उस component के अंदर की DOM element का direct access चाहिए। बिना forwardRef के, function components को refs नहीं दिए जा सकते। यह especially forms में बहुत useful है जहाँ parent को input values access करनी होती हैं या validation के लिए inputs को focus करना होता है।"
