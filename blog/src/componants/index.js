@@ -10,6 +10,8 @@ import LogoutBtn from "./header/Logout.jsx";
 import Logo from "./Logo.jsx";
 import AuthLayout from "./AuthLayout.jsx";
 import RTE from "./RTE.jsx";
+import PostForm from "./post-form/PostForm.jsx";
+import Signup from "./Signup.jsx";
 
 
 export {
@@ -17,6 +19,7 @@ export {
     Footer,
     PostCard,
     Login,
+    Signup,
     Select,
     Button,
     Logo,
@@ -24,5 +27,6 @@ export {
     Input,
     LogoutBtn,
     AuthLayout,
-    RTE
+    RTE,
+    PostForm
 }
