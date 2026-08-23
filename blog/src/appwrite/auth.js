@@ -17,15 +17,17 @@ export class AuthService{
     async createUser(email, password, name){
         try {
            const userAccount = await this.account.create(ID.unique(), email, password, name);
-           
            if(userAccount){
-            //call another method after creating the user account
-           }else{
-            return userAccount
+            return userAccount // return the created user account
            }
         } catch (error) {
             throw error;
         }
+    }
+
+    // Alias for createUser used by Signup component
+    async signup({ email, password, name }) {
+        return this.createUser(email, password, name);
     }
 
     async login(email, password){

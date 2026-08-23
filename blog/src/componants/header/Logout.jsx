@@ -1,7 +1,7 @@
 import React from 'react'
 import { useDispatch } from 'react-redux'
 import { logout } from '../../store/authSlice.js'
-import {authService} from '../../appwrite/auth.js' // imorting object of the AuthService class so we can call the logout method of the class
+import authService from '../../appwrite/auth.js' // importing the default export (instance of AuthService) so we can call the logout method
 function Logout() {
   const dispatch = useDispatch()
   const handleLogout = () => {
