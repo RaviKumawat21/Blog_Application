@@ -1,90 +1,122 @@
 import React from 'react'
-import {useState} from 'react'
+import { useState } from 'react'
 import { useDispatch } from 'react-redux'
-import {Link, useNavigate} from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { Button, Input } from './index.js'
 import Logo from './Logo.jsx'
 import authService from '../appwrite/auth.js'
 import { login as authLogin } from '../store/authSlice.js'
 
-
 function Signup() {
-    const [error, setError] = useState(null);
-    const dispatch = useDispatch();
-    const navigate = useNavigate();
+  const [error, setError] = useState('');
+  const dispatch  = useDispatch();
+  const navigate  = useNavigate();
+  const { register, handleSubmit } = useForm();
 
-    const { register, handleSubmit } = useForm(); 
-
-    const signup = async (data) => {
-        setError("");
-        try {
-            const session = await authService.signup(data); //data contains email and password in a object
-            if (session) {
-                const userData = await authService.getCurrentuser();
-                if (userData) dispatch(authLogin({ userData })); //dispatching the user data to the redux store
-                navigate("/"); //navigate to home page after successful signup
-            }
-        } catch (error) {
-            setError(error.message);
-        }
+  const signup = async (data) => {
+    setError('');
+    try {
+      const session = await authService.signup(data);
+      if (session) {
+        const userData = await authService.getCurrentuser();
+        if (userData) dispatch(authLogin({ userData }));
+        navigate('/');
+      }
+    } catch (err) {
+      setError(err.message);
     }
+  };
 
   return (
-    <div className="flex items-center justify-center">
-            <div className={`mx-auto w-full max-w-lg bg-gray-100 rounded-xl p-10 border border-black/10`}>
-            <div className="mb-2 flex justify-center">
-                    <span className="inline-block w-full max-w-[100px]">
-                        <Logo width="100%" />
-                    </span>
-                </div>
-                <h2 className="text-center text-2xl font-bold leading-tight">Sign up to create account</h2>
-                <p className="mt-2 text-center text-base text-black/60">
-                    Already have an account?&nbsp;
-                    <Link
-                        to="/login"
-                        className="font-medium text-primary transition-all duration-200 hover:underline"
-                    >
-                        Sign In
-                    </Link>
-                </p>
-                {error && <p className="text-red-600 mt-8 text-center">{error}</p>}
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '80vh',
+      padding: 'var(--space-8) var(--space-4)',
+    }}>
+      <div className="auth-card">
+        {/* Logo */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-6)' }}>
+          <Logo />
+        </div>
 
-                <form onSubmit={handleSubmit(signup)} className="mt-8">
-                    <div className='space-y-5'>
-                        <Input
-                        label="Full Name: "
-                        placeholder="Enter your full name"
-                        {...register("name", {
-                            required: true,
-                        })}
-                        />
-                        <Input
-                        label="Email: "
-                        placeholder="Enter your email"
-                        type="email"
-                        {...register("email", {
-                            required: true,
-                            validate: {
-                                matchPatern: (value) => /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(value) ||
-                                "Email address must be a valid address",
-                            }
-                        })}
-                        />
-                        <Input
-                        label="Password: "
-                        type="password"
-                        placeholder="Enter your password"
-                        {...register("password", {
-                            required: true,})}
-                        />
-                        <Button type="submit" className="w-full">
-                            Create Account
-                        </Button>
-                    </div>
-                </form>
-            </div>
+        {/* Heading */}
+        <h1 style={{
+          fontSize: 'var(--text-2xl)',
+          fontWeight: 'var(--font-bold)',
+          color: 'var(--color-text-primary)',
+          textAlign: 'center',
+          marginBottom: 'var(--space-2)',
+        }}>
+          Create an account
+        </h1>
+        <p style={{
+          fontSize: 'var(--text-sm)',
+          color: 'var(--color-text-secondary)',
+          textAlign: 'center',
+          marginBottom: 'var(--space-6)',
+        }}>
+          Already have an account?&nbsp;
+          <Link
+            to="/login"
+            style={{
+              color: 'var(--color-primary)',
+              fontWeight: 'var(--font-medium)',
+              transition: 'color var(--transition-fast)',
+            }}
+            onMouseEnter={(e) => e.target.style.color = 'var(--color-primary-hover)'}
+            onMouseLeave={(e) => e.target.style.color = 'var(--color-primary)'}
+          >
+            Sign in
+          </Link>
+        </p>
 
+        {/* Error */}
+        {error && (
+          <div style={{
+            background: 'var(--color-danger-muted)',
+            border: '1px solid var(--color-danger)',
+            borderRadius: 'var(--radius-md)',
+            padding: 'var(--space-3) var(--space-4)',
+            marginBottom: 'var(--space-5)',
+          }}>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-danger)', margin: 0 }}>{error}</p>
+          </div>
+        )}
+
+        {/* Form */}
+        <form onSubmit={handleSubmit(signup)} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <Input
+            label="Full name"
+            placeholder="Jane Doe"
+            {...register('name', { required: true })}
+          />
+          <Input
+            label="Email address"
+            type="email"
+            placeholder="you@example.com"
+            {...register('email', {
+              required: true,
+              validate: {
+                matchPattern: (v) =>
+                  /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v) ||
+                  'Please enter a valid email address',
+              },
+            })}
+          />
+          <Input
+            label="Password"
+            type="password"
+            placeholder="••••••••"
+            {...register('password', { required: true })}
+          />
+          <Button type="submit" variant="primary" full style={{ marginTop: 'var(--space-2)' }}>
+            Create account
+          </Button>
+        </form>
+      </div>
     </div>
   )
 }

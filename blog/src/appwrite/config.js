@@ -2,7 +2,7 @@ import conf from "../conf/conf.js";
 import {
   Client,
   ID,
-  TablesDB,
+  Databases,
   Permission,
   Role,
   Storage,
@@ -16,51 +16,41 @@ export class Service {
 
   constructor() {
     this.client
-      .setEndpoint(conf.appwriteUrl) // Appwrite endpoint
-      .setProject(conf.appwriteProjectId); // Project ID
+      .setEndpoint(conf.appwriteUrl)
+      .setProject(conf.appwriteProjectId);
 
-    this.databases = new TablesDB(this.client);
-    this.buckets = new Storage(this.client);
+    this.databases = new Databases(this.client); // ✅ was TablesDB (wrong alias)
+    this.buckets   = new Storage(this.client);
   }
 
-  //we are taking thr title slug, content, featureImage, status, userId as parameters from the user to create a post
-  async createPost({ title, slug, content, featureImage, status, userId }) {
+  // ── Posts ────────────────────────────────────────────────────────────────
+
+  async createPost({ title, slug, content, featuredImage, status, userId }) {
     try {
-      return await this.databases.createDocument({
-        databaseId: conf.appwriteDatabaseId,
-        collectionId: conf.appwriteTableId,
-        documentId: slug,
-        data: {
-          title: title,
-          slug: slug,
-          content: content,
-          featureImage: featureImage,
-          status: status,
-          userId: userId,
-        },
-        permissions: [
-          Permission.read(Role.any()), // Public read access
-          Permission.write(Role.user(userId)), // Write access to the post creator
-        ],
-      });
+      // Appwrite SDK uses positional args, NOT an options object
+      return await this.databases.createDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteTableId,
+        slug,                    // documentId
+        { title, slug, content, featuredImage, status, userId },
+        [
+          Permission.read(Role.any()),
+          Permission.write(Role.user(userId)),
+        ]
+      );
     } catch (error) {
       console.log("Appwrite Service createPost error:", error);
     }
   }
 
-  async updatePost(slug, { title, content, featureImage, status }) {
+  async updatePost(slug, { title, content, featuredImage, status }) {
     try {
-      return await this.databases.updateDocument({
-        databaseId: conf.appwriteDatabaseId,
-        collectionId: conf.appwriteTableId,
-        documentId: slug,
-        data: {
-          title: title,
-          content: content,
-          featureImage: featureImage,
-          status: status,
-        },
-      });
+      return await this.databases.updateDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteTableId,
+        slug,
+        { title, content, featuredImage, status }
+      );
     } catch (error) {
       console.log("Appwrite Service updatePost error:", error);
     }
@@ -68,53 +58,53 @@ export class Service {
 
   async deletePost(slug) {
     try {
-      await this.databases.deleteDocument({
-        databaseId: conf.appwriteDatabaseId,
-        collectionId: conf.appwriteTableId,
-        documentId: slug,
-      });
+      await this.databases.deleteDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteTableId,
+        slug
+      );
       return true;
     } catch (error) {
       console.log("Appwrite Service deletePost error:", error);
-
       return false;
     }
   }
 
   async getPost(slug) {
     try {
-      return await this.databases.getDocument({
-        databaseId: conf.appwriteDatabaseId,
-        collectionId: conf.appwriteTableId,
-        documentId: slug,
-      });
+      return await this.databases.getDocument(
+        conf.appwriteDatabaseId,
+        conf.appwriteTableId,
+        slug
+      );
     } catch (error) {
       console.log("Appwrite Service getPost error:", error);
     }
   }
-  // I wnat to get all the posts whose status is active right now
-  async getPosts() {
+
+  async getPosts(queries = [Query.equal("status", "active")]) {
     try {
-      return await this.databases.listDocuments({
-        databaseId: conf.appwriteDatabaseId,
-        collectionId: conf.appwriteTableId,
-        queries: [Query.equal("status", "active")],
-      });
+      return await this.databases.listDocuments(
+        conf.appwriteDatabaseId,
+        conf.appwriteTableId,
+        queries
+      );
     } catch (error) {
       console.log("Appwrite Service getPosts error:", error);
       throw error;
     }
   }
 
+  // ── Storage ──────────────────────────────────────────────────────────────
+
   async uploadFile(file) {
     try {
-         await this.buckets.createFile({
-            bucketId: conf.appwriteBucketId,
-            fileId: ID.unique(),
-            file: file,
-            
-        })
-        return true;
+      // Must return the full response so callers can access file.$id
+      return await this.buckets.createFile(
+        conf.appwriteBucketId,
+        ID.unique(),
+        file
+      );
     } catch (error) {
       console.log("Appwrite Service uploadFile error:", error);
       return false;
@@ -123,33 +113,25 @@ export class Service {
 
   async deleteFile(fileId) {
     try {
-         await this.buckets.deleteFile({
-            bucketId: conf.appwriteBucketId,
-            fileId: fileId,
-        }
-    
-        )
-        return true;
+      await this.buckets.deleteFile(
+        conf.appwriteBucketId,
+        fileId
+      );
+      return true;
     } catch (error) {
       console.log("Appwrite Service deleteFile error:", error);
-      return false
-    }
-  }
-
-  async getFilePreview(fileId) {
-    try {
-         await this.buckets.getFilePreview({
-            bucketId: conf.appwriteBucketId,
-            fileId: fileId,
-        })
-        return true;
-    } catch (error) {
-      console.log("Appwrite Service getFilePreview error:", error);
       return false;
     }
   }
+
+  // Returns a direct URL string (sync — no await needed)
+  getFilePreview(fileId) {
+    return this.buckets.getFilePreview(
+      conf.appwriteBucketId,
+      fileId
+    );
+  }
 }
 
-const service = new Service(); // Creating an object of Service class
-
-export default service; // Exporting the object of Service class
+const appwriteService = new Service();
+export default appwriteService;

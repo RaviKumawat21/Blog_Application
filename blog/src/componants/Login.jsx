@@ -1,20 +1,18 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom"; //Link when we want to navigate to a different page on click of a button or a link and useNavigate when we want to navigate to a different page programmatically like after a successful login or logout
-
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { login as authLogin } from "../store/authSlice.js";
 import { useForm } from "react-hook-form";
 import { useState } from "react";
-import { Button, Select, Input } from "./index.js";
+import { Button, Input } from "./index.js";
 import authService from "../appwrite/auth.js";
 import Logo from "./Logo.jsx";
 
 function Login() {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-
-  const [error, setError] = useState(null);
-  const { register, handleSubmit } = useForm(); // comes under curly braces because we are using multiple functions from useForm
+  const dispatch  = useDispatch();
+  const navigate  = useNavigate();
+  const [error, setError] = useState("");
+  const { register, handleSubmit } = useForm();
 
   const login = async (data) => {
     setError("");
@@ -22,68 +20,96 @@ function Login() {
       const session = await authService.login(data.email, data.password);
       if (session) {
         const userData = await authService.getCurrentuser();
-        if (userData) dispatch(authLogin(userData)); //dispatching the user data to the redux store
-        navigate("/"); //navigate to home page after successful login
+        if (userData) dispatch(authLogin(userData));
+        navigate("/");
       }
-    } catch (error) {
-      setError(error.message);
+    } catch (err) {
+      setError(err.message);
     }
   };
+
   return (
-    <div className="flex items-center justify-center w-full">
-      <div
-        className={` mx-auto w-full max-w-lg bg-gray-100 rounded-xl p-10 border borfer-black/10`}
-      >
-        <div className="mb-2 flex justify-center">
-          <span className="inline-block w-full max-w-[100px]">
-            <Logo width="100%" />
-          </span>
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minHeight: '80vh',
+      padding: 'var(--space-8) var(--space-4)',
+    }}>
+      <div className="auth-card">
+        {/* Logo */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 'var(--space-6)' }}>
+          <Logo />
         </div>
-        <h2 className="text-2xl font-bold text-center mb-4">
-          Login to your account
-        </h2>
-        <p className="mt-2 text-center text-base text-black/60">
-          Don&apos;t have any account?&nbsp;
+
+        {/* Heading */}
+        <h1 style={{
+          fontSize: 'var(--text-2xl)',
+          fontWeight: 'var(--font-bold)',
+          color: 'var(--color-text-primary)',
+          textAlign: 'center',
+          marginBottom: 'var(--space-2)',
+        }}>
+          Welcome back
+        </h1>
+        <p style={{
+          fontSize: 'var(--text-sm)',
+          color: 'var(--color-text-secondary)',
+          textAlign: 'center',
+          marginBottom: 'var(--space-6)',
+        }}>
+          Don&apos;t have an account?&nbsp;
           <Link
             to="/signup"
-            className="font-medium text-primary transition-all duration-200 hover:underline"
+            style={{
+              color: 'var(--color-primary)',
+              fontWeight: 'var(--font-medium)',
+              transition: 'color var(--transition-fast)',
+            }}
+            onMouseEnter={(e) => e.target.style.color = 'var(--color-primary-hover)'}
+            onMouseLeave={(e) => e.target.style.color = 'var(--color-primary)'}
           >
-            Sign Up
+            Sign up
           </Link>
         </p>
-        {error && <p className="text-red-600 mt-8 text-center">{error}</p>}
 
-        <form onSubmit={handleSubmit(login)} className="mt-8">
-          <div className="space-y-5">
-            <Input
-            label="Email: "
-            type ="email"
-            placeholder="Enter your email"
-            {...register("email",
-              {
-                required: true,
-                validate: {
-                        matchPatern: (value) => /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(value) ||
-                        "Email address must be a valid address",
-                    }
-              })} 
-            />
-
-            <Input
-            label="Password: "
-            type ="password"
-            placeholder="Enter your password"
-            {...register("password",
-              {
-                required: true,
-
-            })}
-            />
-
-            <Button
-            type="submit"
-            >Sign in</Button>
+        {/* Error */}
+        {error && (
+          <div style={{
+            background: 'var(--color-danger-muted)',
+            border: '1px solid var(--color-danger)',
+            borderRadius: 'var(--radius-md)',
+            padding: 'var(--space-3) var(--space-4)',
+            marginBottom: 'var(--space-5)',
+          }}>
+            <p style={{ fontSize: 'var(--text-sm)', color: 'var(--color-danger)', margin: 0 }}>{error}</p>
           </div>
+        )}
+
+        {/* Form */}
+        <form onSubmit={handleSubmit(login)} style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          <Input
+            label="Email address"
+            type="email"
+            placeholder="you@example.com"
+            {...register("email", {
+              required: true,
+              validate: {
+                matchPattern: (v) =>
+                  /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(v) ||
+                  "Please enter a valid email address",
+              },
+            })}
+          />
+          <Input
+            label="Password"
+            type="password"
+            placeholder="••••••••"
+            {...register("password", { required: true })}
+          />
+          <Button type="submit" variant="primary" full style={{ marginTop: 'var(--space-2)' }}>
+            Sign in
+          </Button>
         </form>
       </div>
     </div>
