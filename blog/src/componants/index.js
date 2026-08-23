@@ -8,6 +8,8 @@ import Container from "./container/Container.jsx";
 import Input from "./Input.jsx";
 import LogoutBtn from "./header/Logout.jsx";
 import Logo from "./Logo.jsx";
+import AuthLayout from "./AuthLayout.jsx";
+import RTE from "./RTE.jsx";
 
 
 export {
@@ -20,5 +22,7 @@ export {
     Logo,
     Container,
     Input,
-    LogoutBtn
+    LogoutBtn,
+    AuthLayout,
+    RTE
 }
