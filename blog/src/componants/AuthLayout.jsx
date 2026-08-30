@@ -1,31 +1,43 @@
-import React, {useEffect, useState} from 'react'
-import {useSelector} from 'react-redux'
-import {useNavigate} from 'react-router-dom'
+import React, { useEffect } from 'react'
+import { useSelector } from 'react-redux'
+import { useNavigate } from 'react-router-dom'
 
-export default function Protected({children, authentication = true}) {
-
-    const navigate = useNavigate()
-    const [loader, setLoader] = useState(true)
-    const authStatus = useSelector(state => state.auth.status)
+export default function AuthLayout({ children, authentication = true }) {
+    const navigate    = useNavigate()
+    const authStatus  = useSelector((state) => state.auth.status)
+    const initialized = useSelector((state) => state.auth.initialized)
 
     useEffect(() => {
-        //TODO: make it more easy to understand
+        // Wait until App.jsx has finished the session check before redirecting.
+        // Without this guard, AuthLayout sees authStatus=false while the check
+        // is still in flight and incorrectly redirects logged-in users to /login.
+        if (!initialized) return;
 
-        // if (authStatus ===true){
-        //     navigate("/")
-        // } else if (authStatus === false) {
-        //     navigate("/login")
-        // }
-        
-        //let authValue = authStatus === true ? true : false
-
-        if(authentication && authStatus !== authentication){
-            navigate("/login")
-        } else if(!authentication && authStatus !== authentication){
-            navigate("/")
+        if (authentication && !authStatus) {
+            // Protected route — user is not logged in → send to login
+            navigate('/login')
+        } else if (!authentication && authStatus) {
+            // Guest-only route (login/signup) — user is already logged in → send home
+            navigate('/')
         }
-        setLoader(false)
-    }, [authStatus, navigate, authentication])
+    }, [authStatus, initialized, navigate, authentication])
 
-  return loader ? <h1>Loading...</h1> : <>{children}</>
+    // Show a minimal spinner while the session check is in progress
+    if (!initialized) {
+        return (
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '60vh',
+                color: 'var(--color-text-muted)',
+                fontSize: 'var(--text-sm)',
+                fontFamily: 'var(--font-family)',
+            }}>
+                Loading…
+            </div>
+        )
+    }
+
+    return <>{children}</>
 }

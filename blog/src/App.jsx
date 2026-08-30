@@ -1,47 +1,30 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Outlet } from "react-router-dom";
 import "./App.css";
 import { Footer, Header } from "./componants/index.js";
 import { useDispatch } from "react-redux";
-import { login, logout } from "./store/authSlice.js";
+import { login, logout, setInitialized } from "./store/authSlice.js";
 import authService from "./appwrite/auth.js";
 
 function App() {
   const dispatch = useDispatch();
-  const [loading, setLoading] = useState(true); // wait until session check is done
 
   useEffect(() => {
-    // On every page load, check if there is an active Appwrite session.
-    // If yes → sync user into Redux. If no → ensure Redux is logged out.
+    // Check for an existing Appwrite session once on startup.
+    // Always dispatch setInitialized at the end so AuthLayout stops waiting.
     authService
       .getCurrentuser()
       .then((userData) => {
         if (userData) {
-          dispatch(login(userData));
+          dispatch(login(userData));   // also sets initialized = true
         } else {
-          dispatch(logout());
+          dispatch(logout());          // also sets initialized = true
         }
       })
-      .finally(() => setLoading(false));
+      .catch(() => {
+        dispatch(setInitialized());    // error path — still unblock AuthLayout
+      });
   }, [dispatch]);
-
-  if (loading) {
-    // Minimal splash while session resolves — prevents flash of wrong nav state
-    return (
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        minHeight: "100vh",
-        background: "var(--color-bg)",
-        color: "var(--color-text-muted)",
-        fontSize: "var(--text-sm)",
-        fontFamily: "var(--font-family)",
-      }}>
-        Loading…
-      </div>
-    );
-  }
 
   return (
     <div style={{

@@ -42,9 +42,9 @@ export class AuthService{
         try {
            return await this.account.get();
         } catch (error) {
-            throw error;
+            // Not logged in or session expired
+            return null;
         }
-        return null;
     }
 
     async logout(){

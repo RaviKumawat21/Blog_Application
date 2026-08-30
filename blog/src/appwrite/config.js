@@ -25,17 +25,24 @@ export class Service {
 
   // ── Posts ────────────────────────────────────────────────────────────────
 
-  async createPost({ title, slug, content, featuredImage, status, userId }) {
+  async createPost({ title, slug, content, featuredImage, status, userId, authorName }) {
     try {
-      // Appwrite SDK uses positional args, NOT an options object
       return await this.databases.createDocument(
         conf.appwriteDatabaseId,
         conf.appwriteTableId,
-        slug,                    // documentId
-        { title, slug, content, featuredImage, status, userId },
+        slug,                         // slug is the documentId — NOT sent in data body
+        {
+          title,
+          content,
+          featuredImage,
+          status,
+          userId,
+          ...(authorName ? { authorName } : {}),
+        },
         [
           Permission.read(Role.any()),
-          Permission.write(Role.user(userId)),
+          Permission.update(Role.user(userId)),
+          Permission.delete(Role.user(userId)),
         ]
       );
     } catch (error) {
@@ -43,13 +50,20 @@ export class Service {
     }
   }
 
-  async updatePost(slug, { title, content, featuredImage, status }) {
+
+  async updatePost(slug, { title, content, featuredImage, status, authorName }) {
     try {
       return await this.databases.updateDocument(
         conf.appwriteDatabaseId,
         conf.appwriteTableId,
         slug,
-        { title, content, featuredImage, status }
+        {
+          title,
+          content,
+          featuredImage,
+          status,
+          ...(authorName ? { authorName } : {}),
+        }
       );
     } catch (error) {
       console.log("Appwrite Service updatePost error:", error);
@@ -99,11 +113,18 @@ export class Service {
 
   async uploadFile(file) {
     try {
-      // Must return the full response so callers can access file.$id
+      // Pass permissions explicitly:
+      //   - read: any visitor can view the image (needed for blog posts)
+      //   - update/delete: only authenticated users (the uploader)
       return await this.buckets.createFile(
         conf.appwriteBucketId,
         ID.unique(),
-        file
+        file,
+        [
+          Permission.read(Role.any()),
+          Permission.update(Role.users()),
+          Permission.delete(Role.users()),
+        ]
       );
     } catch (error) {
       console.log("Appwrite Service uploadFile error:", error);
@@ -124,13 +145,25 @@ export class Service {
     }
   }
 
-  // Returns a direct URL string (sync — no await needed)
+  // getFilePreview — optimised image thumbnail URL
   getFilePreview(fileId) {
+    if (!fileId) return null;
     return this.buckets.getFilePreview(
+      conf.appwriteBucketId,
+      fileId,
+      2000   // width in px
+    );
+  }
+
+  // getFileView — raw file URL (used for displaying original images)
+  getFileView(fileId) {
+    if (!fileId) return null;
+    return this.buckets.getFileView(
       conf.appwriteBucketId,
       fileId
     );
   }
+
 }
 
 const appwriteService = new Service();

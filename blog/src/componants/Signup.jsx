@@ -20,9 +20,10 @@ function Signup() {
       const session = await authService.signup(data);
       if (session) {
         const userData = await authService.getCurrentuser();
-        if (userData) dispatch(authLogin({ userData }));
+        if (userData) dispatch(authLogin(userData)); // pass directly, not wrapped
         navigate('/');
       }
+
     } catch (err) {
       setError(err.message);
     }

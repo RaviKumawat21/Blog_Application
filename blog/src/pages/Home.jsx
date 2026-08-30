@@ -21,7 +21,22 @@ function Home() {
             alignItems: 'center',
             gap: 'var(--space-4)',
           }}>
-            <span style={{ fontSize: '3rem' }}>✍</span>
+            <div style={{
+              width: '56px',
+              height: '56px',
+              borderRadius: 'var(--radius-full)',
+              background: 'var(--color-surface-raised)',
+              border: '1px solid var(--color-border-subtle)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              color: 'var(--color-primary)',
+            }}>
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+            </div>
             <h1 style={{
               fontSize: 'var(--text-3xl)',
               fontWeight: 'var(--font-bold)',
